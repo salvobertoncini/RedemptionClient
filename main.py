@@ -4,6 +4,8 @@ from uuid import getnode as get_mac
 from cryptography.fernet import Fernet
 
 
+import request
+
 def key_generation(key_path):
     # Put this somewhere safe!
     key = Fernet.generate_key()
