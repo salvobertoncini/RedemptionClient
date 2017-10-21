@@ -3,14 +3,14 @@ import json
 
 class Request:
 
-    url = "http://127.0.0.1:4200"
+    url = "http://192.168.1.11:8000"
     headers = {'Content-type': 'application/json'}
     data = {}
 
-    def __init__(self, url, data, headers):
+    def __init__(self, url, data):
         self.url = url
         self.data = data
-        self.headers = headers
+        self.headers = {'Content-type': 'application/json'}
 
     def getUrl(self):
         return self.url
