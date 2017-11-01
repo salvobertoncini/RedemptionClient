@@ -1,6 +1,9 @@
 # importa il modulo
 from tkinter import *
 import os
+from uuid import getnode as get_mac
+
+import request
 
 # costruisce una classe che gestisce la finestra
 class Application(Frame):
@@ -34,6 +37,16 @@ class Application(Frame):
 
     def payTheBucks(self):
         # Send to Server Payment Request
+        # Create the Request
+        # MAC Address
+        mac = str ( ':'.join(("%012X" % get_mac() )[i:i + 2] for i in range(0, 12, 2)))
+        req = request.Request({"r": "IfUserPayed", "MAC": mac})
+
+        # REQUEST TO SERVER
+        resp = req.CustomPostRequest(req.getData(), req.getUrl(), req.getHeaders())
+        print "IfUserPayed"
+        print resp
+
         if os.path.isfile("check.check"):
             os.remove("check.check")
         self.mess["text"] = "OTTIMA SCELTA! CHIUDI E RIAVVIA QUESTA APPLICAZIONE"

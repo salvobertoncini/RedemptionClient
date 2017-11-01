@@ -3,19 +3,19 @@ import json
 
 class Request:
 
-    url = "http://192.168.1.11:8000"
+    url = ""
     headers = {'Content-type': 'application/json'}
     data = {}
 
-    def __init__(self, url, data):
-        self.url = url
-        self.data = data
+    def __init__(self, data):
+        self.url = "http://127.0.0.1:8000/"
         self.headers = {'Content-type': 'application/json'}
+        self.data = data
 
     def getUrl(self):
         return self.url
 
-    def getDatas(self):
+    def getData(self):
         return self.data
 
     def getHeaders(self):
@@ -30,5 +30,6 @@ class Request:
     def setHeaders(self, headers):
         self.headers = headers
 
-    def CustomPostRequest(self, ReqObj):
-        return requests.post(ReqObj.getUrl(), json=json.dumps(ReqObj.getData()), headers=ReqObj.getHeaders())
+    def CustomPostRequest(self, data, url, header):
+        r = requests.post(url=url, json=data, headers=header)
+        return r.json()
